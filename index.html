@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Let's make a map with D3.js!</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/d3@5.6.0/dist/d3.min.js"></script>
+    <script src="https://d3js.org/d3-array.v2.min.js"></script>
+    <script src="https://unpkg.com/topojson@3.0.2/dist/topojson.min.js"></script>
+  </head>
+  <body>
+    <div class="search-bar">
+      <input id="search-box" type="text">
+      <button type="button" onclick="fill_rect(document.getElementById('search-box').value)">Search</button>
+    </div>
+    <div class="map">
+      <svg width="1200"></svg>
+    </div>
+    <script type="module" src="main.js"></script>
+    <script>
+      const svg = d3.select("svg");
+      const rect = svg.append("rect")
+        .attr("width", 100)
+        .attr("height", 100);
+
+      let test_cost = [0, 642123]
+
+      var color_test = d3.scaleLinear()
+        // .domain(test_cost[0], (test_cost[0]+test_cost[1])/2, test_cost[1])
+        .domain([0, 300000, 642123])
+        .range(["red", "yellow", "green"]);
+
+      const fill_rect = color_map_num => {
+        console.log(color_map_num);
+        rect.attr("fill", color_test(color_map_num));
+      }
+    </script>
+  </body>
+</html>
