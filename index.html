@@ -8,15 +8,15 @@
     <script src="https://unpkg.com/topojson@3.0.2/dist/topojson.min.js"></script>
   </head>
   <body>
-    <div class="search-bar">
+    <!-- <div class="search-bar">
       <input id="search-box" type="text">
       <button type="button" onclick="fill_rect(document.getElementById('search-box').value)">Search</button>
-    </div>
+    </div> -->
     <div class="map">
       <svg width="1200"></svg>
     </div>
     <script type="module" src="main.js"></script>
-    <script>
+    <!-- <script>
       const svg = d3.select("svg");
       const rect = svg.append("rect")
         .attr("width", 100)
@@ -33,6 +33,6 @@
         console.log(color_map_num);
         rect.attr("fill", color_test(color_map_num));
       }
-    </script>
+    </script> -->
   </body>
 </html>
