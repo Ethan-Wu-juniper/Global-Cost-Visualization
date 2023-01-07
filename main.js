@@ -44,7 +44,7 @@ const getCountryCostIndex = (cost_index, alias) => {
     if(el.Country.includes("(")) {
       let stripIdx = el.Country.indexOf("(")-1;
       el.Country = el.Country.substring(0, stripIdx);
-      console.log(stripIdx, el.Country);
+      // console.log(stripIdx, el.Country);
     }
     let country = alias[el.Country]==undefined?el.Country:alias[el.Country];
     cost[country] = +el["Cost of Living Index"];

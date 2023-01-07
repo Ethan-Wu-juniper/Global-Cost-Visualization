@@ -14,13 +14,17 @@ body {
 }
 
 .map {
-    text-align: center;
-    position: fixed;
-    height: 95%;
-    width: 95%;
-    margin-top: 2.5%;
-    margin-bottom: 2.5%;
-    margin-left: 2.5%;
-    margin-right: 2.5%;
-    /* overflow-y: auto; */
+    border: 2px solid;
+    position: absolute;
+    top: 50%;
+    transform: translate(30%, -55%);
+    padding: 0px;
+}
+
+.legend {
+    /* border: 2px solid; */
+    position: absolute;
+    top: 90%;
+    transform: translate(350%, 0%);
+    padding: 10px;
 }
