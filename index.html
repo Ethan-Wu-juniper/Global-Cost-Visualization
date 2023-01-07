@@ -17,20 +17,12 @@
     <input id="search-box" type="text">
     <button type="button" onclick="fill_rect(document.getElementById('search-box').value)">Search</button>
   </div>
-  <div>
-    <input id="viewbox-value" type="text">
-    <button type="button" onclick="changeBox(document.getElementById('viewbox-value').value)">viewBox</button>
-  </div>
   <div class="map">
     <svg id="world-map" width="1200" viewbox="0,0,1200,800"></svg>
   </div>
   <script type="module" src="main.js"></script>
   <script>
-    const changeBox = value => {
-      console.log(value);
-      d3.select("#world-map")
-        .attr("viewBox", value);
-    }
+    // this area is for debugging
   </script>
 </body>
 
