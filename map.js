@@ -1,4 +1,4 @@
-/* https://gist.github.com/almccon/6ab03506d2e3ff9d843f69fa2d5c29cf */
+import { getZoom, drag } from "./svg_utils.js";
 
 const show_amount = (selection, country_name, cost, mouseX, mouseY) => {
   const InfoG = selection
@@ -70,6 +70,7 @@ export const renderMap = (selection, country_cost, alias_map) => {
     .domain([-1, 0, 1])
     .range(["green", "#fafdbe", "red"]);
 
+    /* https://gist.github.com/almccon/6ab03506d2e3ff9d843f69fa2d5c29cf */
   var url = "http://enjalot.github.io/wwsd/data/world/world-110m.geojson";
   Promise.all([
     d3.json(url),
@@ -107,10 +108,20 @@ export const renderMap = (selection, country_cost, alias_map) => {
       });
     // remove Antarctica from the map
     selection.select("#Antarctica").remove();
+    selection.on("mousedown", function() {
+      d3.select(this).classed("dragged", true);
+    })
+    .on("mouseup", function() {
+      d3.select(this).classed("dragged", false);
+    });
+
+    let world_map = document.getElementById('world-map');
+    world_map.addEventListener('wheel', getZoom("world-map"), false);
+    world_map.addEventListener('mousemove', drag, false);
   })
 
   /* https://blog.scottlogic.com/2019/03/13/how-to-create-a-continuous-colour-range-legend-using-d3-and-d3fc.html */
-  /* https://github.com/chrisprice/d3fc-series */
+  /* https://github.com/d3fc/d3fc/blob/master/README.md */
   let legend = d3.select("body").append("div")
     .attr("class", "legend");
   // Band scale for x-axis
