@@ -1,25 +1,29 @@
 import { getZoom, drag } from "./svg_utils.js";
 
 const show_amount = (selection, country_name, cost, mouseX, mouseY) => {
-  const InfoG = selection
-    .selectAll('#info-rect').data([null])
-  const InfoEnter = InfoG.enter().append('g')
-    .merge(InfoG)
-    .attr('id', 'info-rect')
-    .attr('transform', `translate(0, 0)`);
-
+  // console.log(mouseX, mouseY)
+  
   const rect_size = {width: 300, height: 70};
   let rect_pos;
   if(mouseX < selection.attr("width")/3)
-    rect_pos = {x: mouseX, y: mouseY-80}
+    rect_pos = {x: mouseX, y: mouseY-100}
   else
-    rect_pos = {x: mouseX - rect_size.width, y: mouseY-80}
+    rect_pos = {x: mouseX - rect_size.width, y: mouseY-100}
+  const InfoG = selection
+    .selectAll('#info-rect').data([null])
+  const InfoEnter = InfoG.enter().append('svg')
+    .merge(InfoG)
+    .attr('id', 'info-rect')
+    .attr('x', rect_pos.x)
+    .attr('y', rect_pos.y)
+    .attr('width', rect_size.width)
+    .attr('height', rect_size.height);
   const InfoRect = InfoEnter.merge(InfoG)
     .selectAll('rect').data([null]);
   InfoRect.enter().append('rect')
     .merge(InfoRect)
-    .attr('x', rect_pos.x)
-    .attr('y', rect_pos.y)
+    // .attr('x', rect_pos.x)
+    // .attr('y', rect_pos.y)
     .attr('width', rect_size.width)
     .attr('height', rect_size.height)
     .attr('stroke-width', 2)
@@ -28,7 +32,7 @@ const show_amount = (selection, country_name, cost, mouseX, mouseY) => {
 
   const TextConfig = text => {
     text.attr('font-size', 17)
-      .attr('x', rect_pos.x + rect_size.width/12)
+      .attr('x', rect_size.width/12)
       .style("text-anchor", "start")
       .style("alignment-baseline", "central")
       .style('fill', 'black');
@@ -38,7 +42,7 @@ const show_amount = (selection, country_name, cost, mouseX, mouseY) => {
   InfoText.enter().append('text')
     .merge(InfoText)
     .attr("class", "country_info")
-    .attr('y', rect_pos.y + rect_size.height/3)
+    .attr('y', rect_size.height/3)
     .call(TextConfig)
     .text(country_name);
 
@@ -49,7 +53,7 @@ const show_amount = (selection, country_name, cost, mouseX, mouseY) => {
   CostText.enter().append('text')
     .merge(CostText)
     .attr("class", "cost_info")
-    .attr('y', rect_pos.y + rect_size.height*2/3)
+    .attr('y', rect_size.height*2/3)
     .call(TextConfig)
     .text("Cost of Living Index : " + cost);
 }
@@ -57,6 +61,7 @@ const show_amount = (selection, country_name, cost, mouseX, mouseY) => {
 export const renderMap = (selection, country_cost, alias_map) => {
   const width = selection.attr("width");
   const height = selection.attr("height");
+  
 
   var projection = d3.geoMercator()
     .scale(width / 2 / Math.PI)
@@ -75,8 +80,12 @@ export const renderMap = (selection, country_cost, alias_map) => {
   Promise.all([
     d3.json(url),
   ]).then(([geojson]) => {
+    const world_map = selection.append("svg");
+    world_map.attr("id", "world-map")
+      .attr("viewBox", "0,0,1200,800");
     // let cost_range = d3.extent(Object.values(country_cost), d => d);
-    selection.selectAll('path').data(geojson.features)
+
+    world_map.selectAll('path').data(geojson.features)
       .enter().append("path")
       .attr("class", "country")
       .attr("id", d => alias_map[d.properties.name]==undefined?d.properties.name:alias_map[d.properties.name])
@@ -100,24 +109,25 @@ export const renderMap = (selection, country_cost, alias_map) => {
         d3.selectAll('#info-rect').remove()
       })
       .on('mousemove', function(_, d) {
-        let mouse = d3.pointer(event);
+        let mouse = d3.pointer(event, this.parentNode.parentNode);
         let mouseX = mouse[0];
         let mouseY = mouse[1];
         let country = d3.select(this).attr("id");
+        // const mapDiv = world_map.select(function() {return this.parentNode});
         show_amount(selection, d.properties.name, country_cost[country], mouseX, mouseY);
       });
     // remove Antarctica from the map
-    selection.select("#Antarctica").remove();
+    world_map.select("#Antarctica").remove();
     selection.on("mousedown", function() {
-      d3.select(this).classed("dragged", true);
+      world_map.classed("dragged", true);
     })
     .on("mouseup", function() {
-      d3.select(this).classed("dragged", false);
+      world_map.classed("dragged", false);
     });
+    // console.log(world_map.node())
 
-    let world_map = document.getElementById('world-map');
-    world_map.addEventListener('wheel', getZoom("world-map"), false);
-    world_map.addEventListener('mousemove', drag, false);
+    selection.node().addEventListener('wheel', getZoom("world-map"), false);
+    selection.node().addEventListener('mousemove', drag, false);
   })
 
   /* https://blog.scottlogic.com/2019/03/13/how-to-create-a-continuous-colour-range-legend-using-d3-and-d3fc.html */
@@ -149,8 +159,8 @@ export const renderMap = (selection, country_cost, alias_map) => {
     .crossValue(0)
     .baseValue((_, i) => (i > 0 ? expandedDomain[i - 1] : 0))
     .mainValue(d => d)
-    .decorate(selection => {
-      selection.selectAll("path").style("fill", d => (d>17) ? color(cost_degree(d)) : "none");
+    .decorate(world_map => {
+      world_map.selectAll("path").style("fill", d => (d>17) ? color(cost_degree(d)) : "none");
     });
 
   // Drawing the legend bar

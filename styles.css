@@ -22,9 +22,8 @@ body {
 }
 
 .legend {
-    /* border: 2px solid; */
     position: absolute;
     top: 90%;
     transform: translate(350%, 0%);
     padding: 10px;
-}
+} 
