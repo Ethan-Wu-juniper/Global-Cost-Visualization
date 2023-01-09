@@ -17,7 +17,6 @@ export const getCountryCost = (cost_data, features, alias, group_by = null) => {
 
     cost = {};
     Array.from(costG, ([key, values]) => {
-      // console.log(alias[key], values);
       key = alias[key]==undefined ? key : alias[key];
       cost[key] = d3.mean(values, d => d.cost);
     })
@@ -31,7 +30,6 @@ export const getCountryCostIndex = (cost_index, alias, feature) => {
     if(el.Country.includes("(")) {
       let stripIdx = el.Country.indexOf("(")-1;
       el.Country = el.Country.substring(0, stripIdx);
-      // console.log(stripIdx, el.Country);
     }
     let country = alias[el.Country]==undefined?el.Country:alias[el.Country];
     cost[country] = +el[feature];
@@ -47,3 +45,11 @@ export const CostIndexName = [
   "Restaurant Price Index",
   "Local Purchasing Power Index"
 ]
+
+export const getCityCoordinate = city_data => {
+  let city_coor = {};
+  city_data.features.forEach(d => {
+    city_coor[d.properties.NAME] = d.geometry.coordinates;
+  });
+  return city_coor;
+}

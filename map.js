@@ -15,7 +15,6 @@ const setScale = (scale) => {
 }
 
 const show_amount = (selection, country_name, cost, mouseX, mouseY) => {
-  // console.log(mouseX, mouseY)
   
   const rect_size = {width: 300, height: 70};
   let rect_pos;
@@ -69,10 +68,11 @@ const show_amount = (selection, country_name, cost, mouseX, mouseY) => {
     .attr("class", "cost_info")
     .attr('y', rect_size.height*2/3)
     .call(TextConfig)
-    .text("Cost of Living Index : " + cost);
+    .text("Index : " + cost);
 }
 
-const renderMap = (selection, cost_index, alias_map, feature) => {
+const renderMap = (selection, cost_index, alias_map, feature, city_coor, cost_data) => {
+  console.log(cost_data);
   const width = selection.attr("width");
   const height = selection.attr("height");
   
@@ -81,13 +81,8 @@ const renderMap = (selection, cost_index, alias_map, feature) => {
     alias_map,
     feature
   );
-
-  // console.log("max", d3.max(Object.values(country_cost)));
-  // console.log("min", d3.min(Object.values(country_cost)));
   let sorted_cost = Object.values(country_cost);
   sorted_cost.sort(d3.descending);
-  // console.log(sorted_cost)
-  console.log([Math.floor(sorted_cost[7]), Math.floor(sorted_cost[sorted_cost.length-1])])
   setScale([Math.floor(sorted_cost[sorted_cost.length-1]), Math.floor(sorted_cost[7])])
 
   var projection = d3.geoMercator()
@@ -139,11 +134,21 @@ const renderMap = (selection, cost_index, alias_map, feature) => {
         let mouseX = mouse[0];
         let mouseY = mouse[1];
         let country = d3.select(this).attr("id");
-        // const mapDiv = world_map.select(function() {return this.parentNode});
         show_amount(selection, d.properties.name, country_cost[country], mouseX, mouseY);
       })
       .on('click', function(_, d){
-
+        let country = d3.select(this).attr("id");
+        // console.log(country)
+        let cities = cost_data.filter(d => alias_map[d.country] == country).map(d => d.city);
+        // console.log(cities);
+        cities.forEach(d => console.log(d, path(city_coor.features.filter(coor => coor.properties.NAME == d)[0]), city_coor.features.filter(coor => coor.properties.NAME == d)))
+        const cityEnter = world_map.selectAll(".city").data(cities);
+        cityEnter.enter().append("path")
+        .merge(cityEnter)
+            .attr("class", "city")
+            .attr("id", d => d)
+            .attr("d", d => path(city_coor.features.filter(coor => coor.properties.NAME == d)[0]))
+        cityEnter.exit().remove();
       });
     // remove Antarctica from the map
     world_map.select("#Antarctica").remove();
@@ -153,7 +158,6 @@ const renderMap = (selection, cost_index, alias_map, feature) => {
     .on("mouseup", function() {
       world_map.classed("dragged", false);
     });
-    // console.log(world_map.node())
 
 
   })
@@ -237,7 +241,6 @@ const renderLegend = (domain) => {
 
   // Drawing and translating the label
   const barHeight = Math.abs(legendBar.node().getBoundingClientRect().height);
-  // console.log(legendBar.node().getBoundingClientRect())
   const axisEnter = legendSvg.selectAll(".legend-axis").data([null]);
   axisEnter.enter().append("g")
   .merge(axisEnter)
@@ -248,15 +251,15 @@ const renderLegend = (domain) => {
     .call(axisLabel);
 }
 
-export const renderMainPage = (selection, cost_index, alias_map) => {
+export const renderMainPage = (selection, cost_index, alias_map, city_coor, cost_data) => {
   const svg = selection.select('svg');
   svg.attr("height", svg.attr("width") * 2 / 3);
   // setScale([17,86]);
-  renderMap(svg, cost_index, alias_map, "Cost of Living Index");
+  renderMap(svg, cost_index, alias_map, "Cost of Living Index", city_coor, cost_data);
   const onOptionClicked = option => {
     // domain = option=='Rent Index'?[0, 30]:[17,86];
     // setScale(domain);
-    renderMap(svg, cost_index, alias_map, option);
+    renderMap(svg, cost_index, alias_map, option, city_coor, cost_data);
     renderLegend(domain);
   }
   svg.node().addEventListener('wheel', getZoom("world-map"), true);
