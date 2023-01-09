@@ -1,4 +1,12 @@
 import { getZoom, drag } from "./svg_utils.js";
+import { getCountryCostIndex, CostIndexName } from "./data_utils.js"
+
+const cost_degree = d3.scaleLinear()
+  .domain([17, 86])
+  .range([-1, 1]);
+const color = d3.scaleLinear()
+  .domain([-1, 0, 1])
+  .range(["green", "#fafdbe", "red"]);
 
 const show_amount = (selection, country_name, cost, mouseX, mouseY) => {
   // console.log(mouseX, mouseY)
@@ -58,35 +66,39 @@ const show_amount = (selection, country_name, cost, mouseX, mouseY) => {
     .text("Cost of Living Index : " + cost);
 }
 
-export const renderMap = (selection, country_cost, alias_map) => {
+const renderMap = (selection, cost_index, alias_map, feature) => {
   const width = selection.attr("width");
   const height = selection.attr("height");
   
+  let country_cost = getCountryCostIndex(
+    cost_index,
+    alias_map,
+    feature
+  );
 
   var projection = d3.geoMercator()
     .scale(width / 2 / Math.PI)
     .translate([width / 2, height / 2 + height / 5]);
   var path = d3.geoPath()
     .projection(projection);
-  var cost_degree = d3.scaleLinear()
-    .domain([17, 86])
-    .range([-1, 1]);
-  var color = d3.scaleLinear()
-    .domain([-1, 0, 1])
-    .range(["green", "#fafdbe", "red"]);
+  
 
     /* https://gist.github.com/almccon/6ab03506d2e3ff9d843f69fa2d5c29cf */
   var url = "http://enjalot.github.io/wwsd/data/world/world-110m.geojson";
   Promise.all([
     d3.json(url),
   ]).then(([geojson]) => {
-    const world_map = selection.append("svg");
-    world_map.attr("id", "world-map")
+    const mapData = selection.selectAll("#world-map").data([null])
+    const world_map = mapData.enter().append("svg")
+      .merge(mapData)
+      .attr("id", "world-map")
       .attr("viewBox", "0,0,1200,800");
     // let cost_range = d3.extent(Object.values(country_cost), d => d);
 
-    world_map.selectAll('path').data(geojson.features)
+    const mapEnter = world_map.selectAll('path').data(geojson.features);
+    mapEnter
       .enter().append("path")
+      .merge(mapEnter)
       .attr("class", "country")
       .attr("id", d => alias_map[d.properties.name]==undefined?d.properties.name:alias_map[d.properties.name])
       .attr("d", path)
@@ -129,7 +141,30 @@ export const renderMap = (selection, country_cost, alias_map) => {
     selection.node().addEventListener('wheel', getZoom("world-map"), false);
     selection.node().addEventListener('mousemove', drag, false);
   })
+}
 
+const renderMenu = (selection, props) => {
+  const {
+    onOptionClicked,
+    selectedOption
+  } = props;
+
+  let select = selection.selectAll('select').data([null]);
+  select = select.enter().append('select')
+    .merge(select)
+      .on('change', function() {
+        onOptionClicked(this.value);
+      });
+
+  const option = select.selectAll('option').data(CostIndexName);
+  option.enter().append('option')
+    .merge(option)
+      .attr('value', d => d)
+      .property('selected', d => d === selectedOption)
+      .text(d => d);
+}
+
+const renderLegend = () => {
   /* https://blog.scottlogic.com/2019/03/13/how-to-create-a-continuous-colour-range-legend-using-d3-and-d3fc.html */
   /* https://github.com/d3fc/d3fc/blob/master/README.md */
   let legend = d3.select("body").append("div")
@@ -184,4 +219,20 @@ export const renderMap = (selection, country_cost, alias_map) => {
     .attr("transform", `translate(100,${barHeight/2})`)
     .datum(expandedDomain)
     .call(axisLabel);
+}
+
+export const renderMainPage = (selection, cost_index, alias_map) => {
+  const svg = selection.select('svg');
+  svg.attr("height", svg.attr("width") * 2 / 3);
+  renderMap(svg, cost_index, alias_map, "Cost of Living Index");
+  const onOptionClicked = option => {
+    renderMap(svg, cost_index, alias_map, option);
+  }
+
+  const menu = selection.select("#index-menu");
+  renderMenu(menu, {
+    onOptionClicked: onOptionClicked,
+    selectedOption: "Cost of Living Index"
+  });
+  renderLegend();
 }
