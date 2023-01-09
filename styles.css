@@ -1,6 +1,6 @@
 body {
     margin: 0px;
-    overflow: hidden;
+    /* overflow: hidden; */
 }
 
 .sphere {
@@ -15,15 +15,28 @@ body {
 
 .map {
     border: 2px solid;
-    position: absolute;
+    /* position: absolute;
     top: 50%;
-    transform: translate(30%, -55%);
+    transform: translate(30%, -55%); */
+    margin: auto;
+    width: 1300px;
+    height: 866.6667px;
     padding: 0px;
 }
 
 .legend {
     position: absolute;
-    top: 90%;
-    transform: translate(350%, 0%);
+    bottom: 10%;
+    /* top: 90%; */
+    /* transform: translate(350%, 0%); */
     padding: 10px;
 } 
+
+.menu {
+    margin: 16px auto;
+    width: fit-content;
+}
+
+.menu select {
+    font-size: 2.7em;
+}

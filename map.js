@@ -77,8 +77,8 @@ const renderMap = (selection, cost_index, alias_map, feature) => {
   );
 
   var projection = d3.geoMercator()
-    .scale(width / 2 / Math.PI)
-    .translate([width / 2, height / 2 + height / 5]);
+    .scale(width / 2 / Math.PI - 15)
+    .translate([width / 2 - 47, height / 2 + height / 5 - 40]);
   var path = d3.geoPath()
     .projection(projection);
   
@@ -138,8 +138,7 @@ const renderMap = (selection, cost_index, alias_map, feature) => {
     });
     // console.log(world_map.node())
 
-    selection.node().addEventListener('wheel', getZoom("world-map"), false);
-    selection.node().addEventListener('mousemove', drag, false);
+
   })
 }
 
@@ -167,8 +166,12 @@ const renderMenu = (selection, props) => {
 const renderLegend = () => {
   /* https://blog.scottlogic.com/2019/03/13/how-to-create-a-continuous-colour-range-legend-using-d3-and-d3fc.html */
   /* https://github.com/d3fc/d3fc/blob/master/README.md */
-  let legend = d3.select("body").append("div")
-    .attr("class", "legend");
+  // let legend = d3.select(".map").append("div")
+  //   .attr("class", "legend");
+  let legendData = d3.select(".map").selectAll(".legend").data([null]);
+  let legend = legendData.enter().append("div")
+    .merge(legendData)
+      .attr("class", "legend");
   // Band scale for x-axis
   const legend_size = {"width": 200, "height" : 50}
   let domain = [17, 86];
@@ -228,6 +231,8 @@ export const renderMainPage = (selection, cost_index, alias_map) => {
   const onOptionClicked = option => {
     renderMap(svg, cost_index, alias_map, option);
   }
+  svg.node().addEventListener('wheel', getZoom("world-map"), true);
+  svg.node().addEventListener('mousemove', drag, true);
 
   const menu = selection.select("#index-menu");
   renderMenu(menu, {
