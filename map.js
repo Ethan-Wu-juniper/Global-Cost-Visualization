@@ -1,12 +1,18 @@
 import { getZoom, drag } from "./svg_utils.js";
 import { getCountryCostIndex, CostIndexName } from "./data_utils.js"
 
-const cost_degree = d3.scaleLinear()
-  .domain([17, 86])
-  .range([-1, 1]);
-const color = d3.scaleLinear()
-  .domain([-1, 0, 1])
-  .range(["green", "#fafdbe", "red"]);
+let cost_degree, color;
+let domain;
+
+const setScale = (scale) => {
+  domain = scale;
+  cost_degree = d3.scaleLinear()
+    .domain(scale)
+    .range([-1, 1]);
+  color = d3.scaleLinear()
+    .domain([-1, 0, 1])
+    .range(["green", "#fafdbe", "red"]);
+}
 
 const show_amount = (selection, country_name, cost, mouseX, mouseY) => {
   // console.log(mouseX, mouseY)
@@ -76,6 +82,14 @@ const renderMap = (selection, cost_index, alias_map, feature) => {
     feature
   );
 
+  // console.log("max", d3.max(Object.values(country_cost)));
+  // console.log("min", d3.min(Object.values(country_cost)));
+  let sorted_cost = Object.values(country_cost);
+  sorted_cost.sort(d3.descending);
+  // console.log(sorted_cost)
+  console.log([Math.floor(sorted_cost[7]), Math.floor(sorted_cost[sorted_cost.length-1])])
+  setScale([Math.floor(sorted_cost[sorted_cost.length-1]), Math.floor(sorted_cost[7])])
+
   var projection = d3.geoMercator()
     .scale(width / 2 / Math.PI - 15)
     .translate([width / 2 - 47, height / 2 + height / 5 - 40]);
@@ -127,6 +141,9 @@ const renderMap = (selection, cost_index, alias_map, feature) => {
         let country = d3.select(this).attr("id");
         // const mapDiv = world_map.select(function() {return this.parentNode});
         show_amount(selection, d.properties.name, country_cost[country], mouseX, mouseY);
+      })
+      .on('click', function(_, d){
+
       });
     // remove Antarctica from the map
     world_map.select("#Antarctica").remove();
@@ -163,7 +180,7 @@ const renderMenu = (selection, props) => {
       .text(d => d);
 }
 
-const renderLegend = () => {
+const renderLegend = (domain) => {
   /* https://blog.scottlogic.com/2019/03/13/how-to-create-a-continuous-colour-range-legend-using-d3-and-d3fc.html */
   /* https://github.com/d3fc/d3fc/blob/master/README.md */
   // let legend = d3.select(".map").append("div")
@@ -174,7 +191,7 @@ const renderLegend = () => {
       .attr("class", "legend");
   // Band scale for x-axis
   const legend_size = {"width": 200, "height" : 50}
-  let domain = [17, 86];
+  // let domain = [17, 86];
   // Linear scale for y-axis
   const xScale = d3
     .scaleLinear()
@@ -185,7 +202,7 @@ const renderLegend = () => {
     .domain([0, 1])
     .range([0, legend_size.height]);
 
-  let min = 17, max = 86;
+  let min = domain[0], max = domain[1];
   const expandedDomain = d3.range(min, max, (max - min) / legend_size.width);
 
   // Defining the legend bar
@@ -198,11 +215,14 @@ const renderLegend = () => {
     .baseValue((_, i) => (i > 0 ? expandedDomain[i - 1] : 0))
     .mainValue(d => d)
     .decorate(world_map => {
-      world_map.selectAll("path").style("fill", d => (d>17) ? color(cost_degree(d)) : "none");
+      world_map.selectAll("path").style("fill", d => (d>min) ? color(cost_degree(d)) : "none");
     });
 
   // Drawing the legend bar
-  const legendSvg = legend.append("svg")
+  const legendEnter = legend.selectAll("svg").data([null]);
+  const legendSvg = legendEnter.enter().append("svg")
+  .merge(legendEnter)
+  // const legendSvg = legend.append("svg")
     .attr("width", legend_size.width+200)
     .attr("height", legend_size.height);
   const legendBar = legendSvg
@@ -218,7 +238,11 @@ const renderLegend = () => {
   // Drawing and translating the label
   const barHeight = Math.abs(legendBar.node().getBoundingClientRect().height);
   // console.log(legendBar.node().getBoundingClientRect())
-  legendSvg.append("g")
+  const axisEnter = legendSvg.selectAll(".legend-axis").data([null]);
+  axisEnter.enter().append("g")
+  .merge(axisEnter)
+  // legendSvg.append("g")
+    .attr("class", "legend-axis")
     .attr("transform", `translate(100,${barHeight/2})`)
     .datum(expandedDomain)
     .call(axisLabel);
@@ -227,9 +251,13 @@ const renderLegend = () => {
 export const renderMainPage = (selection, cost_index, alias_map) => {
   const svg = selection.select('svg');
   svg.attr("height", svg.attr("width") * 2 / 3);
+  // setScale([17,86]);
   renderMap(svg, cost_index, alias_map, "Cost of Living Index");
   const onOptionClicked = option => {
+    // domain = option=='Rent Index'?[0, 30]:[17,86];
+    // setScale(domain);
     renderMap(svg, cost_index, alias_map, option);
+    renderLegend(domain);
   }
   svg.node().addEventListener('wheel', getZoom("world-map"), true);
   svg.node().addEventListener('mousemove', drag, true);
@@ -239,5 +267,5 @@ export const renderMainPage = (selection, cost_index, alias_map) => {
     onOptionClicked: onOptionClicked,
     selectedOption: "Cost of Living Index"
   });
-  renderLegend();
+  renderLegend(domain);
 }
