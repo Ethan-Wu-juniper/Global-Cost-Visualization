@@ -9,11 +9,10 @@ const getCityIcon = (path, city_coor, country) => d => {
   let pathCMD = path(city_coor.features.filter(coor => coor.properties.NAME == d && coor.properties.ADM0_A3 == country)[0]);
   if(pathCMD == null)
    return
-  console.log(d, pathCMD);
   let locIdx = pathCMD.indexOf("m");
   let iconCMD = pathCMD.substring(1, locIdx);
   let coor = iconCMD.split(",");
-  let resultCMD = "M" + iconCMD + "L" + `${coor[0]},${+coor[1]-1}` + "a1,1 0,1,1 1,0" + "Z";
+  let resultCMD = "M" + iconCMD + "L" + `${coor[0]},${+coor[1]-3}` + "a3,3 0,1,1 1,0" + "Z";
   return resultCMD;
 }
 
@@ -28,7 +27,6 @@ const setScale = (scale) => {
 }
 
 const show_amount = (selection, country_name, cost, mouseX, mouseY) => {
-  console.log(selection)
   
   const rect_size = {width: 300, height: 70};
   let rect_pos;
@@ -86,7 +84,6 @@ const show_amount = (selection, country_name, cost, mouseX, mouseY) => {
 }
 
 const show_city = (selection, city_name, mouseX, mouseY) => {
-  console.log(selection)
   
   const rect_size = {width: 150, height: 35};
   let rect_pos;
@@ -133,7 +130,6 @@ const show_city = (selection, city_name, mouseX, mouseY) => {
 }
 
 const renderMap = (selection, cost_index, alias_map, feature, city_coor, cost_data, city_index, bar) => {
-  console.log(cost_data);
   const width = selection.attr("width");
   const height = selection.attr("height");
   
@@ -208,14 +204,7 @@ const renderMap = (selection, cost_index, alias_map, feature, city_coor, cost_da
           .on("mousemove", null);
 
         let country = d3.select(this).attr("id");
-        // console.log(country)
         let cities = city_index.filter(d => alias_map[d.country] == country).map(d => d.city);
-        // console.log(cities);
-        // cities.forEach(d => console.log(d, 
-        //   path(city_coor.features.filter(coor => coor.properties.NAME == d)[0]), 
-        //   // city_coor.features.filter(coor => coor.properties.NAME == d),
-        //   path(city_coor.features.filter(coor => coor.properties.NAME == d)[0]).indexOf("m"))
-        //   )
         const cityEnter = world_map.selectAll(".city").data(cities);
         cityEnter.enter().append("path")
         .merge(cityEnter)
@@ -227,7 +216,6 @@ const renderMap = (selection, cost_index, alias_map, feature, city_coor, cost_da
               let city_row = city_index.filter(d => {
                 return d.city == city && alias_map[d.country] == country
               })
-              console.log(city, feature, city_row, color(cost_degree(city_row[0][feature])));
               if(city_row.length != 0)
                 return color(cost_degree(city_row[0][feature]));
               else
@@ -251,8 +239,9 @@ const renderMap = (selection, cost_index, alias_map, feature, city_coor, cost_da
               let city = d3.select(this).attr("id");
               show_city(selection, city, mouseX, mouseY);
             })
-            .on("click", d => {
+            .on("click", function() {
               let city = d3.select(this).attr("id");
+              console.log(city)
               bar.show();
               bar.addCity(city);
             });
@@ -266,7 +255,7 @@ const renderMap = (selection, cost_index, alias_map, feature, city_coor, cost_da
         d3.select(".menu")
         .style("margin", "10px 50px");
         d3.select(".legend")
-        .style("top", "45%")
+        .style("top", "90%")
         .style("left", "-50px");
         selection
         .transition().duration(200)
