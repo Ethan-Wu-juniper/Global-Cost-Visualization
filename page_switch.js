@@ -1,3 +1,3 @@
-export const switcPage = country => {
-  
+export const switchPage = country => {
+  console.log(country);
 }

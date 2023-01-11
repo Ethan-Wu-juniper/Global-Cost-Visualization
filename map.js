@@ -1,6 +1,7 @@
 import { getZoom, drag } from "./svg_utils.js";
 import { barChart } from './bar.js'
 import { getCountryCostIndex, CostIndexName } from "./data_utils.js"
+import { switchPage } from "./page_switch.js";
 
 let cost_degree, color;
 let domain;
@@ -287,6 +288,8 @@ const renderMap = (selection, cost_index, alias_map, feature, city_coor, cost_da
                 return "gray";
             })
           });
+
+          switchPage(d.properties.name);
       });
     // remove Antarctica from the map
     world_map.select("#Antarctica").remove();
