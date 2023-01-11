@@ -33,6 +33,8 @@ body {
     /* top: 90%; */
     /* transform: translate(350%, 0%); */
     padding: 10px;
+    height: fit-content;
+    width: fit-content;
 } 
 
 .menu {
