@@ -1,4 +1,4 @@
-import { attributeCostOfLiving } from "./bar.js";
+import { attributeCostOfLiving, categoryAttribute } from "./bar.js";
 export const pcorr = (x, y) => {
     let sumX = 0,
       sumY = 0,
@@ -45,7 +45,7 @@ export const getCorrelationMatrix = data => {
 export const renderHeatmap = (data, description) => {
   const matrix = getCorrelationMatrix(data);
   // set the dimensions and margins of the graph
-  const margin = {top: 80, right: 25, bottom: 50, left: 40},
+  const margin = {top: 80, right: 25, bottom: 50, left: 140},
   width = 900 - margin.left - margin.right,
   height = 900 - margin.top - margin.bottom;
 
@@ -54,7 +54,7 @@ export const renderHeatmap = (data, description) => {
     .append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
-    .append("g")
+  const g = svg.append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
     // Build X scales and axis:
@@ -62,7 +62,7 @@ export const renderHeatmap = (data, description) => {
     .range([ 0, width ])
     .domain(attributeCostOfLiving)
     .padding(0.05);
-  const xAxisG = svg.append("g")
+  const xAxisG = g.append("g")
     .style("font-size", 15)
     .attr("transform", `translate(0, ${height})`)
     .call(d3.axisBottom(x).tickSize(0))
@@ -78,10 +78,27 @@ export const renderHeatmap = (data, description) => {
     .range([ height, 0 ])
     .domain(attributeCostOfLiving)
     .padding(0.05);
-  const yAxisG = svg.append("g")
+  const yAxisG = g.append("g")
     .style("font-size", 15)
     .call(d3.axisLeft(y).tickSize(0))
     .select(".domain").remove()
+
+  const categoryLabel = svg.selectAll('text.category-label').data(Object.keys(categoryAttribute))
+    .join('text')
+    .attr('class', 'category-label')
+    .attr('x', margin.left / 2 - 10)
+    .attr('y', d => margin.top + y.bandwidth() + (y(categoryAttribute[d][0]) + y(categoryAttribute[d][categoryAttribute[d].length - 1])) / 2)
+    .attr('text-anchor', 'middle')
+    .text(d => d);
+
+  const categoryDivider = svg.append('g').attr("transform", `translate(0,${margin.top})`)
+    .selectAll('line').data(Object.keys(categoryAttribute))
+    .join('line')
+    .attr('stroke', 'currentColor')
+    .attr('x2', margin.left + width)
+    .attr('y1', d => y(categoryAttribute[d][0]) + y.bandwidth() + 0.1 )
+    .attr('y2', d => y(categoryAttribute[d][0]) + y.bandwidth() + 0.1 )
+    // .attr('y2', d => y(categoryAttribute[d][0]))
 
   // const myColor = d3.scaleSequential()
   //   .interpolator(d3.interpolateInferno)
@@ -111,7 +128,7 @@ export const renderHeatmap = (data, description) => {
   }
   const mousemove = function(event,d) {
     tooltip
-      .html(`Correlation: ${d.value}<br>${d.col}: ${description[d.col]}<br>${d.row}: ${description[d.row]}`)
+      .html(`Correlation: ${d.value.toFixed(6)}<br>${d.col}: ${description[d.col]}<br>${d.row}: ${description[d.row]}`)
       .style("left", (event.offsetX) + 8 + "px")
       .style("top", (event.offsetY) + 8 + "px")
   }
@@ -124,7 +141,7 @@ export const renderHeatmap = (data, description) => {
   }
 
 
-  svg.selectAll("rect")
+  g.selectAll("rect")
     // .data(data, function(d) {return d.group+':'+d.variable;})
     .data(matrix)
     .join("rect")

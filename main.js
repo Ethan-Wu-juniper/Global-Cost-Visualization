@@ -32,7 +32,6 @@ Promise.all([
 
   renderMainPage(d3.select("body"), cost_index, alias_map, city_data, cost_data, city_index);
   const good_cost_data = cost_data.filter(row => row.data_quality == 1);
-  // renderBar(good_cost_data, "Taipei", "Taichung", "Tainan")
   const bar = new barChart(good_cost_data);
   bar.addCity("Taipei");
   bar.addCity("Tokyo");

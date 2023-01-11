@@ -24,7 +24,7 @@ function rankings(array) {
 
 // const getAllRanking = (data) => ;
 
-const categoryAttribute = {
+export const categoryAttribute = {
   restaurant: columnXIndex(1, 7),
   market: columnXIndex(8, 20),
   transportation: columnXIndex(28, 8),
@@ -61,7 +61,8 @@ export const attributeCostOfLiving = columnXIndex(1, 55);
 export class barChart {
   constructor(data) {
     this.rawData = data;
-    this.svg = d3.select('#bar-chart');
+    this.svg = d3.selectAll('.bar').append('svg').attr('width', 1500).attr('height', 600);
+    this.hide();
 
     this.width = +this.svg.attr('width');
     this.height = +this.svg.attr('height');
@@ -114,6 +115,14 @@ export class barChart {
     this.barData = [];
     this.bar = this.g;
     this.legend = this.g
+  }
+
+  show() {
+    this.svg.attr('display', null);
+  }
+
+  hide() {
+    this.svg.attr('display', 'none');
   }
 
   addCity(...names) {
