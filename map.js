@@ -389,6 +389,12 @@ export const renderMainPage = (selection, cost_index, alias_map, city_coor, cost
   }
   svg.node().addEventListener('wheel', getZoom("world-map"), true);
   svg.node().addEventListener('mousemove', drag, true);
+  svg.on("mouseover", function() {
+    d3.select("body").style("overflow", "hidden");
+  })
+  .on("mouseout", function() {
+    d3.select("body").style("overflow", "auto");
+  })
 
   const menu = selection.select("#index-menu");
   renderMenu(menu, {
