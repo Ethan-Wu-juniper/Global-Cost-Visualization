@@ -262,7 +262,31 @@ const renderMap = (selection, cost_index, alias_map, feature, city_coor, cost_da
         .attr("width", 750).attr("height", 500);
 
         d3.selectAll(".country")
-          .attr("fill", "#D3D3D3")
+          .attr("fill", "#D3D3D3");
+
+        d3.select(".index-menu-select")
+          .on('change', function() {
+            let country_cost = getCountryCostIndex(
+              cost_index,
+              alias_map,
+              this.value
+            );
+            let sorted_cost = Object.values(country_cost);
+            sorted_cost.sort(d3.descending);
+            setScale([Math.floor(sorted_cost[sorted_cost.length-1]), Math.floor(sorted_cost[7])]);
+            renderLegend(domain);
+            world_map.selectAll(".city").data(cities)
+            .attr("fill", function() {
+              let city = d3.select(this).attr("id");
+              let city_row = city_index.filter(d => {
+                return d.city == city && alias_map[d.country] == country
+              })
+              if(city_row.length != 0)
+                return color(cost_degree(city_row[0][feature]));
+              else
+                return "gray";
+            })
+          });
       });
     // remove Antarctica from the map
     world_map.select("#Antarctica").remove();
@@ -286,6 +310,7 @@ const renderMenu = (selection, props) => {
   let select = selection.selectAll('select').data([null]);
   select = select.enter().append('select')
     .merge(select)
+    .attr("class", "index-menu-select")
       .on('change', function() {
         onOptionClicked(this.value);
       });
