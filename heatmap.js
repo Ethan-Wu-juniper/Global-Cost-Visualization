@@ -67,10 +67,11 @@ export const renderHeatmap = (data, description) => {
     .attr("transform", `translate(0, ${height})`)
     .call(d3.axisBottom(x).tickSize(0))
   xAxisG.selectAll("text")
-    .attr("transform", `rotate(60)`)
+    .attr("transform", `rotate(90)`)
+    .attr("dominant-baseline", "central")
     .attr("dx", "1em")
-    .attr("dy", "0.5em")
-    .attr("text-anchor", "start");
+    .attr("dy", "-0.2em")
+    .attr("text-anchor", "middle");
   xAxisG.select(".domain").remove()
 
   // Build Y scales and axis:
@@ -91,14 +92,22 @@ export const renderHeatmap = (data, description) => {
     .attr('text-anchor', 'middle')
     .text(d => d);
 
-  const categoryDivider = svg.append('g').attr("transform", `translate(0,${margin.top})`)
+  const categoryDividerY = svg.append('g').attr("transform", `translate(0,${margin.top})`)
     .selectAll('line').data(Object.keys(categoryAttribute))
     .join('line')
     .attr('stroke', 'currentColor')
     .attr('x2', margin.left + width)
     .attr('y1', d => y(categoryAttribute[d][0]) + y.bandwidth() + 0.1 )
     .attr('y2', d => y(categoryAttribute[d][0]) + y.bandwidth() + 0.1 )
-    // .attr('y2', d => y(categoryAttribute[d][0]))
+
+  const categoryDividerX = svg.append('g').attr("transform", `translate(${margin.left},${margin.top})`)
+    .selectAll('line').data(Object.keys(categoryAttribute))
+    .join('line')
+    .attr('stroke', 'currentColor')
+    .attr('x1', d => x(categoryAttribute[d][0]))
+    .attr('x2', d => x(categoryAttribute[d][0]))
+    .attr('y2', height + margin.bottom)
+
 
   // const myColor = d3.scaleSequential()
   //   .interpolator(d3.interpolateInferno)
