@@ -35,6 +35,7 @@ body {
     padding: 10px;
     height: fit-content;
     width: fit-content;
+    pointer-events: none;
 } 
 
 .menu {

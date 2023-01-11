@@ -1,4 +1,5 @@
 import { getZoom, drag } from "./svg_utils.js";
+import { barChart } from './bar.js'
 import { getCountryCostIndex, CostIndexName } from "./data_utils.js"
 
 let cost_degree, color;
@@ -27,6 +28,7 @@ const setScale = (scale) => {
 }
 
 const show_amount = (selection, country_name, cost, mouseX, mouseY) => {
+  console.log(selection)
   
   const rect_size = {width: 300, height: 70};
   let rect_pos;
@@ -83,7 +85,54 @@ const show_amount = (selection, country_name, cost, mouseX, mouseY) => {
     .text("Index : " + cost);
 }
 
-const renderMap = (selection, cost_index, alias_map, feature, city_coor, cost_data, city_index) => {
+const show_city = (selection, city_name, mouseX, mouseY) => {
+  console.log(selection)
+  
+  const rect_size = {width: 150, height: 35};
+  let rect_pos;
+  if(mouseX < selection.attr("width")/3)
+    rect_pos = {x: mouseX, y: mouseY-100}
+  else
+    rect_pos = {x: mouseX - rect_size.width, y: mouseY-100}
+  const InfoG = selection
+    .selectAll('#info-rect').data([null])
+  const InfoEnter = InfoG.enter().append('svg')
+    .merge(InfoG)
+    .attr('id', 'info-rect')
+    .attr('x', rect_pos.x)
+    .attr('y', rect_pos.y)
+    .attr('width', rect_size.width)
+    .attr('height', rect_size.height);
+  const InfoRect = InfoEnter.merge(InfoG)
+    .selectAll('rect').data([null]);
+  InfoRect.enter().append('rect')
+    .merge(InfoRect)
+    // .attr('x', rect_pos.x)
+    // .attr('y', rect_pos.y)
+    .attr('width', rect_size.width)
+    .attr('height', rect_size.height)
+    .attr('stroke-width', 2)
+    .attr("stroke", "black")
+    .attr('fill', "white");
+
+  const TextConfig = text => {
+    text.attr('font-size', 17)
+      .attr('x', rect_size.width/12)
+      .style("text-anchor", "start")
+      .style("alignment-baseline", "central")
+      .style('fill', 'black');
+  }
+  const InfoText = InfoEnter.merge(InfoG)
+    .selectAll('.country_info').data([null]);
+  InfoText.enter().append('text')
+    .merge(InfoText)
+    .attr("class", "country_info")
+    .attr('y', rect_size.height/2)
+    .call(TextConfig)
+    .text(city_name);
+}
+
+const renderMap = (selection, cost_index, alias_map, feature, city_coor, cost_data, city_index, bar) => {
   console.log(cost_data);
   const width = selection.attr("width");
   const height = selection.attr("height");
@@ -149,6 +198,15 @@ const renderMap = (selection, cost_index, alias_map, feature, city_coor, cost_da
         show_amount(selection, d.properties.name, country_cost[country], mouseX, mouseY);
       })
       .on('click', function(_, d){
+        d3.select(this).attr('opacity', 1);
+        d3.select(this).attr('stroke-width', 1);
+        document.body.style.cursor = "default";
+        d3.selectAll('#info-rect').remove();
+        d3.selectAll(".country")
+          .on("mouseout", null)
+          .on("mouseover", null)
+          .on("mousemove", null);
+
         let country = d3.select(this).attr("id");
         // console.log(country)
         let cities = city_index.filter(d => alias_map[d.country] == country).map(d => d.city);
@@ -174,6 +232,29 @@ const renderMap = (selection, cost_index, alias_map, feature, city_coor, cost_da
                 return color(cost_degree(city_row[0][feature]));
               else
                 return "gray";
+            })
+            .on("mouseover", function(_, d) {
+              d3.select(this).attr('opacity', 0.85);
+              d3.select(this).attr('stroke-width', 2);
+              document.body.style.cursor = "pointer";
+            })
+            .on('mouseout', function(_, d) {
+              d3.select(this).attr('opacity', 1);
+              d3.select(this).attr('stroke-width', 1);
+              document.body.style.cursor = "default";
+              d3.selectAll('#info-rect').remove()
+            })
+            .on('mousemove', function(_, d) {
+              let mouse = d3.pointer(event, this.parentNode.parentNode);
+              let mouseX = mouse[0];
+              let mouseY = mouse[1];
+              let city = d3.select(this).attr("id");
+              show_city(selection, city, mouseX, mouseY);
+            })
+            .on("click", d => {
+              let city = d3.select(this).attr("id");
+              bar.show();
+              bar.addCity(city);
             });
         cityEnter.exit().remove();
 
@@ -295,15 +376,15 @@ const renderLegend = (domain) => {
     .call(axisLabel);
 }
 
-export const renderMainPage = (selection, cost_index, alias_map, city_coor, cost_data, city_index) => {
+export const renderMainPage = (selection, cost_index, alias_map, city_coor, cost_data, city_index, bar) => {
   const svg = selection.select('svg');
   svg.attr("height", svg.attr("width") * 2 / 3);
   // setScale([17,86]);
-  renderMap(svg, cost_index, alias_map, "Cost of Living Index", city_coor, cost_data, city_index);
+  renderMap(svg, cost_index, alias_map, "Cost of Living Index", city_coor, cost_data, city_index, bar);
   const onOptionClicked = option => {
     // domain = option=='Rent Index'?[0, 30]:[17,86];
     // setScale(domain);
-    renderMap(svg, cost_index, alias_map, option, city_coor, cost_data, city_index);
+    renderMap(svg, cost_index, alias_map, option, city_coor, cost_data, city_index, bar);
     renderLegend(domain);
   }
   svg.node().addEventListener('wheel', getZoom("world-map"), true);
