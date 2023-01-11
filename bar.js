@@ -25,8 +25,8 @@ function rankings(array) {
 // const getAllRanking = (data) => ;
 
 export const categoryAttribute = {
-  restaurant: columnXIndex(1, 7),
-  market: columnXIndex(8, 20),
+  restaurant: columnXIndex(1, 8),
+  market: columnXIndex(9, 20),
   transportation: columnXIndex(28, 8),
   utility: columnXIndex(36, 3),
   sportAndLeisure: columnXIndex(39, 3),
@@ -136,6 +136,12 @@ export class barChart {
     var idx = this.nameList.indexOf(name);
     this.nameList.splice(idx, 1);
     this.barData.splice(idx * this.xDomain.length, this.xDomain.length);
+    this.updateBar();
+  }
+
+  clearCities() {
+    this.nameList = [];
+    this.barData = [];
     this.updateBar();
   }
 
