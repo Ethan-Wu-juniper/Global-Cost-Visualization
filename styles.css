@@ -14,6 +14,7 @@ body {
 }
 
 .map {
+    position: relative;
     border: 2px solid;
     /* position: absolute;
     top: 50%;
@@ -47,4 +48,8 @@ body {
     stroke: black;
     stroke-width: 0.1;
     /* fill: red; */
+}
+
+#heatmap {
+    position: relative;
 }
