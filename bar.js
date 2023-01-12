@@ -1,3 +1,5 @@
+import { ranking_plot } from "./ranking_plot.js";
+
 const columnXIndex = (start, length) => Array.from( {length}, (_, i) => `x${i + start}` );
 
 const barCategory = [
@@ -70,9 +72,10 @@ export class barChart {
     this.categoryRanking = getAllRanking(data);
     this.div = d3.selectAll('.bar');
     d3.select('.detail').style('display', 'none');
-    this.rankingDiv = d3.select('.ranking');
+    this.rankingDiv = d3.select('.ranking-list');
     this.svg = this.div.append('svg').attr('width', 1600).attr('height', 400);
     this.hide();
+    this.ranking_plot = new ranking_plot();
 
     this.width = +this.svg.attr('width');
     this.height = +this.svg.attr('height');
@@ -212,14 +215,11 @@ export class barChart {
         return null;
       })
 
+    this.ranking_plot.update_plot(rankingData)
+
   }
 
   addCity(name) {
-    // }
-    // if(nameIdx != this.rawData.length)
-    //   console.log(nameIdx)
-    // barCategory.forEach(cate => {console.log(cate, this.categoryRanking[cate][nameIdx])})
-    // var addNames = names.filter(name => !this.nameList.includes(name))
     this.cityRankingShow(name);
     if(this.nameList.includes(name))
       return;

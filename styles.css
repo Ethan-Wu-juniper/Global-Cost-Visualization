@@ -18,6 +18,15 @@ body {
 
 .ranking {
     width: calc(100% - 64px);
+    display: flex;
+}
+
+.ranking-list {
+    width: 250px;
+}
+
+.ranking-plot {
+    flex: 1;
 }
 
 .sphere {
