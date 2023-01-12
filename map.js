@@ -89,9 +89,9 @@ const show_city = (selection, city_name, mouseX, mouseY) => {
   const rect_size = {width: 150, height: 35};
   let rect_pos;
   if(mouseX < selection.attr("width")/3)
-    rect_pos = {x: mouseX, y: mouseY-100}
+    rect_pos = {x: mouseX, y: mouseY-40}
   else
-    rect_pos = {x: mouseX - rect_size.width, y: mouseY-100}
+    rect_pos = {x: mouseX - rect_size.width, y: mouseY-40}
   const InfoG = selection
     .selectAll('#info-rect').data([null])
   const InfoEnter = InfoG.enter().append('svg')
