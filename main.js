@@ -30,12 +30,7 @@ Promise.all([
   })
   console.log(city_index);
 
-  const good_cost_data = cost_data.filter(row => row.data_quality == 1);
-  const bar = new barChart(good_cost_data);
+  const bar = new barChart(cost_data, cost_description);
   renderMainPage(d3.select("body"), cost_index, alias_map, city_data, cost_data, city_index, bar);
-  // bar.addCity("Taipei");
-  // bar.addCity("Tokyo");
-  // bar.addCity("Osaka");
-  // d3.select('button').on('click', () => bar.addCity('Taichung'));
-  // renderHeatmap(good_cost_data, cost_description);
+  renderHeatmap(cost_data, cost_description);
 })

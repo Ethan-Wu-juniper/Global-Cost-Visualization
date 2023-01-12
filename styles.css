@@ -3,6 +3,23 @@ body {
     /* overflow: hidden; */
 }
 
+.chart {
+    background-color: white;
+    width: fit-content;
+    padding: 32px;
+    margin: 16px;
+    box-shadow: 1px 1px 2px;
+    box-sizing: marg;
+}
+
+.show-selected {
+    width: calc(100% - 64px);
+}
+
+.ranking {
+    width: calc(100% - 64px);
+}
+
 .sphere {
     fill: #4242e4;
 }

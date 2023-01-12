@@ -22,11 +22,15 @@ function rankings(array) {
     .map(a => a[2]);
 }
 
-// const getAllRanking = (data) => ;
+const getAllRanking = (data) => Object.fromEntries(
+  barCategory.map(cate => [
+    cate,
+    rankings(data.map(row => categorySumValue(cate)(row))
+)]));
 
 export const categoryAttribute = {
   restaurant: columnXIndex(1, 8),
-  market: columnXIndex(9, 20),
+  market: columnXIndex(9, 19),
   transportation: columnXIndex(28, 8),
   utility: columnXIndex(36, 3),
   sportAndLeisure: columnXIndex(39, 3),
@@ -37,14 +41,6 @@ export const categoryAttribute = {
   salary: columnXIndex(54, 2)
 };
 
-// const barScaleCategory = (data) => {
-//   const sumCategory = {};
-//   barCategory.forEach(e => sumCategory[e] = 0.0);
-//   data.forEach(row => {
-//     Object.entries(categoryAttribute).forEach(([k, v]) =>
-//     v.forEach(attr => sumCategory[k] += row[attr]))
-//   })
-// }
 const categorySumValue = cate => row => categoryAttribute[cate].reduce((p, c) => p + +row[c], 0);
 
 const barScaleCategory = (data, range) => Object.fromEntries(
@@ -58,20 +54,38 @@ const barScaleCategory = (data, range) => Object.fromEntries(
 
 export const attributeCostOfLiving = columnXIndex(1, 55);
 
+const barScaleAllAttr = (data, range) => Object.fromEntries(
+  attributeCostOfLiving.map(attr => [
+    attr,
+    d3.scaleLinear()
+      .domain(d3.extent(data, d => +d[attr]))
+      .range(range)
+  ])
+);
+
 export class barChart {
-  constructor(data) {
+  constructor(data, description) {
     this.rawData = data;
-    this.svg = d3.selectAll('.bar').append('svg').attr('width', 1500).attr('height', 600);
+    this.description = description;
+    this.categoryRanking = getAllRanking(data);
+    this.div = d3.selectAll('.bar');
+    d3.select('.detail').style('display', 'none');
+    this.rankingDiv = d3.select('.ranking');
+    this.svg = this.div.append('svg').attr('width', 1600).attr('height', 400);
     this.hide();
 
     this.width = +this.svg.attr('width');
     this.height = +this.svg.attr('height');
-    this.margin = {top: 80, right: 80, bottom: 40, left:40}
+    this.margin = {top: 30, right: 80, bottom: 80, left:140}
     this.innerWidth = this.width - this.margin.left - this.margin.right;
     this.innerHeight = this.height - this.margin.top - this.margin.bottom;
 
     this.categoryLocalRange = [0, 1];
     this.categoryScale = barScaleCategory(this.rawData, [this.innerHeight, 0]);
+    this.allAttrScale = barScaleAllAttr(this.rawData, [this.innerHeight, 0]);
+    // console.log(this.allAttrScale)
+    this.yScale = this.categoryScale;
+    this.mode = "all";
 
     this.xDomain = barCategory;
     // const xDomain = categoryAttribute[category];
@@ -81,35 +95,27 @@ export class barChart {
     .domain(this.xDomain)
     .range([0, this.innerWidth]);
 
-    this.yScale = d3.scaleLinear()
-      .domain(this.categoryLocalRange)
+    this.axisYScale = d3.scaleBand()
+      .domain(['low', 'high'])
       .range([this.innerHeight, 0])
+      .padding(-50)
 
     this.slotBetweenAttr = 5;
     this.barTotalWidth = this.innerWidth / this.xDomain.length - this.slotBetweenAttr;
 
     this.xzScale = d3.scaleBand()
-      // .domain(name)
       .range([0, this.barTotalWidth])
 
     this.zScale = d3.scaleOrdinal()
-      // .domain(name)
       .range(d3.schemeTableau10)
         
     this.g = this.svg.append('g')
       .attr('transform', `translate(${this.margin.left},${this.margin.top})`);
 
-    // const legend = g.selectAll('text').data(name).join('text')
-    //   .attr('fill', d => zScale(d))
-    //   .attr('y', (_, i) => 30*i)
-    //   .text(d => d)
-
-    this.xAxisG = this.g.append('g')
-      .call(d3.axisBottom(this.xScale))
-      .attr('transform', `translate(0,${this.innerHeight})`);
+    this.xAxisAppend();
 
     this.yAxisG = this.g.append('g')
-      .call(d3.axisLeft(this.yScale))
+      .call(d3.axisLeft(this.axisYScale))
 
     this.nameList = [];
     this.barData = [];
@@ -117,18 +123,86 @@ export class barChart {
     this.legend = this.g
   }
 
+  xAxisAppend() {
+    this.xAxisG = this.g.append('g')
+      .call(d3.axisBottom(this.xScale))
+      .attr('transform', `translate(0,${this.innerHeight})`);
+    if(this.xDomain != barCategory){
+      this.xAxisG.selectAll('text')
+        .html(d => this.description[d].replace(/\(/g, ',(').split(',').map((s, i) =>`<tspan x="0" y="${16 + i*16}">${s}</tspan>`))
+        // .text(d => d)
+        // .text(d => this.description[d])
+
+        // .attr('transform', 'rotate(30)')
+    }
+    this.xAxisG.selectAll('text')
+      .on('click', (_, d) => this.changeMode(d))
+  }
+
+  changeMode(cate) {
+    if(cate && barCategory.includes(cate)){
+      this.xDomain = categoryAttribute[cate];
+      this.yScale = this.allAttrScale;
+    }
+    else{
+      this.xDomain = barCategory;
+      this.yScale = this.categoryScale;
+    }
+    this.xScale.domain(this.xDomain);
+    this.xAxisG.remove();
+    this.xAxisAppend();
+    this.barTotalWidth = this.innerWidth / this.xDomain.length - this.slotBetweenAttr;
+    this.xzScale.range([0, this.barTotalWidth]);
+    this.barData = this.nameList.reduce((p, c) => {
+      p.push(...processData(this.rawData, c, this.xDomain))
+      return p;
+    }, []) 
+    this.bar.selectAll('rect').remove();
+    this.updateBar();
+  }
+
   show() {
-    this.svg.attr('display', null);
+    this.div.style('display', null);
   }
 
   hide() {
-    this.svg.attr('display', 'none');
+    this.div.style('display', 'none');
   }
 
-  addCity(...names) {
-    var addNames = names.filter(name => !this.nameList.includes(name))
-    this.nameList.push(...addNames);
-    this.barData.push(...processData(this.rawData, addNames));
+  cityRankingShow(name) {
+    var nameIdx;
+    for(nameIdx = 0; nameIdx < this.rawData.length; nameIdx++){
+      if(this.rawData[nameIdx].city == name)
+        break;
+    }
+    if(nameIdx == this.rawData.length)
+      return;
+
+    var rankingData = barCategory.map(cate => [cate, this.categoryRanking[cate][nameIdx]]);
+    console.log(rankingData);
+    
+    this.rankingDiv.selectAll('h3').data([name])
+      .join('h3')
+      .text(d => d);
+
+    this.rankingDiv.selectAll('p')
+      .data(rankingData)
+      .join('p')
+      .text(d => `${d[0]}: ${d[1]} / ${this.rawData.length}`)
+
+  }
+
+  addCity(name) {
+    // }
+    // if(nameIdx != this.rawData.length)
+    //   console.log(nameIdx)
+    // barCategory.forEach(cate => {console.log(cate, this.categoryRanking[cate][nameIdx])})
+    // var addNames = names.filter(name => !this.nameList.includes(name))
+    this.cityRankingShow(name);
+    if(this.nameList.includes(name))
+      return;
+    this.nameList.push(name);
+    this.barData.push(...processData(this.rawData, name, this.xDomain));
     this.updateBar();
   }
 
@@ -153,41 +227,44 @@ export class barChart {
       // .transition().duration(500)
         .attr('id', (d, i) => `bar-${i}`)
         .attr('x', d => this.xScale(d.attr) + this.xzScale(d.name) + this.slotBetweenAttr / 2)
-        .attr('y', d => this.categoryScale[d.attr](d.value))
+        .attr('y', d => this.yScale[d.attr](d.value))
         .attr('width', this.xzScale.bandwidth())
-        .attr('height', d => this.categoryScale[d.attr](this.categoryScale[d.attr].domain()[0]) - this.categoryScale[d.attr](d.value))
+        .attr('height', d => this.yScale[d.attr](this.yScale[d.attr].domain()[0]) - this.yScale[d.attr](d.value))
         .attr('fill', d => this.zScale(d.name))
     this.legend.selectAll('text.bar-legend').data(this.nameList)
       .join('text')
       .attr('class', 'bar-legend')
       .attr('fill', d => this.zScale(d))
+      .attr('x', -120)
       .attr('y', (_, i) => 30*i)
+      .style('cursor', 'pointer')
       .text(d => d)
       .on('click', (_, d) => { this.deleteCity(d); })
 
   }
 }
 
-export const processData = (data, name, attr=attributeCostOfLiving) => 
-  data.filter(d => name.includes(d.city))
-    .reduce((prev, curr) => {
-      if(attr === attributeCostOfLiving){
-        Object.entries(categoryAttribute).forEach(([k, v]) => {
-          prev.push({
-            name: curr.city,
+export const processData = (data, name, attrs=barCategory) => { 
+  var row = data.filter(d => name == d.city);
+  if(row.length == 0)
+    // return new Array(55).fill(0).map(() => new Array(55).fill(0));
+    return attrs.map(attr => ({name, attr}));
+  
+    // .reduce((prev, curr) => {
+      if(attrs === barCategory){
+        return Object.entries(categoryAttribute).map(([k, v]) => ({
+            name,
             attr: k,
-            value: v.reduce((vPrev, vCurr) => vPrev + +curr[vCurr], 0)
-          })
-        })
+            value: v.reduce((vPrev, vCurr) => vPrev + +row[0][vCurr], 0)
+          }));
       }
       else {
-        attr.forEach(attr => {
-          prev.push({
-            name: curr.city,
+        return attrs.map(attr => ({
+            name,
             attr,
-            value: curr[attr]
-          })
-        })
+            value: row[0][attr]
+          }));
       }
-      return prev;
-    }, []);
+      // return prev;
+    // }, []);
+  }

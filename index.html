@@ -12,21 +12,34 @@
   <script src="https://unpkg.com/topojson@3.0.2/dist/topojson.min.js"></script>
 </head>
 
-<body>
+<body bgcolor="orange">
   <!-- <div class="search-bar">
     <input id="search-box" type="text">
     <button type="button" onclick="fill_rect(document.getElementById('search-box').value)">Search</button>
   </div> -->
-  <div class="map">
-    <svg width="1300"></svg>
+  <div style="display: flex; width: 100%;">
+    <div class="chart">
+      <div class="map">
+        <svg width="1300"></svg>
+      </div>
+      <div class="menu">
+        <span id="index-menu"></span>
+      </div>
+    </div>
+    <div class="detail" style="flex-grow: 1; display: flex; padding-right: 32px;">
+      <div class="chart show-selected">
+        <h2></h2>
+      </div>
+      <div class="chart ranking">
+        <h3>Click a city to show its detail.</h3>
+      </div>
+    </div>
   </div>
-  <div class="menu">
-    <span id="index-menu"></span>
+  <div class="bar chart" display="none">
   </div>
-  <div class="bar" display="none">
-  </div>
-  <button>click</button>
+  <div class="chart">
   <div id="heatmap">
+  </div>
   </div>
   <script type="module" src="main.js"></script>
   <script>
