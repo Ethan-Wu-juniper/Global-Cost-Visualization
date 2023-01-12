@@ -76,7 +76,7 @@ export class barChart {
 
     this.width = +this.svg.attr('width');
     this.height = +this.svg.attr('height');
-    this.margin = {top: 30, right: 80, bottom: 80, left:140}
+    this.margin = {top: 30, right: 80, bottom: 80, left:160}
     this.innerWidth = this.width - this.margin.left - this.margin.right;
     this.innerHeight = this.height - this.margin.top - this.margin.bottom;
 
@@ -116,6 +116,8 @@ export class barChart {
 
     this.yAxisG = this.g.append('g')
       .call(d3.axisLeft(this.axisYScale))
+    this.yAxisG.selectAll('text')
+      .attr('font-size', '2em')
 
     this.nameList = [];
     this.barData = [];
@@ -132,21 +134,32 @@ export class barChart {
         .html(d => this.description[d].replace(/\(/g, ',(').split(',').map((s, i) =>`<tspan x="0" y="${16 + i*16}">${s}</tspan>`))
         // .text(d => d)
         // .text(d => this.description[d])
-
-        // .attr('transform', 'rotate(30)')
     }
-    this.xAxisG.selectAll('text')
-      .on('click', (_, d) => this.changeMode(d))
+    else {
+      this.xAxisG.selectAll('text')
+        .attr('font-size', '2em')
+        .attr('cursor', 'pointer')
+        .on('click', (_, d) => this.changeMode(d))
+    }
+    // this.xAxisG.selectAll('text')
   }
 
   changeMode(cate) {
     if(cate && barCategory.includes(cate)){
       this.xDomain = categoryAttribute[cate];
       this.yScale = this.allAttrScale;
+      this.hintCategory = this.g.append('text')
+        .text(cate)
+        .attr('x', this.innerWidth / 2)
+        .attr('y', this.innerHeight + this.margin.bottom / 2 + 20)
+        .attr('text-anchor', 'middle')
+        .attr('cursor', 'pointer')
+        .on('click', () => this.changeMode())
     }
     else{
       this.xDomain = barCategory;
       this.yScale = this.categoryScale;
+      this.hintCategory.remove();
     }
     this.xScale.domain(this.xDomain);
     this.xAxisG.remove();
@@ -183,12 +196,21 @@ export class barChart {
     
     this.rankingDiv.selectAll('h3').data([name])
       .join('h3')
-      .text(d => d);
+      .text(d => `Ranking of ${d}`);
 
     this.rankingDiv.selectAll('p')
       .data(rankingData)
       .join('p')
       .text(d => `${d[0]}: ${d[1]} / ${this.rawData.length}`)
+      .style('color', d => {
+        var rate = d[1] / this.rawData.length;
+        console.log(rate);
+        if(rate <= 0.2)
+          return "red";
+        if(rate >= 0.8)
+          return "green";
+        return null;
+      })
 
   }
 
@@ -235,7 +257,7 @@ export class barChart {
       .join('text')
       .attr('class', 'bar-legend')
       .attr('fill', d => this.zScale(d))
-      .attr('x', -120)
+      .attr('x', -this.margin.left)
       .attr('y', (_, i) => 30*i)
       .style('cursor', 'pointer')
       .text(d => d)

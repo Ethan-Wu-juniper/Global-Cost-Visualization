@@ -56,6 +56,13 @@ export const renderHeatmap = (data, description) => {
     .attr("height", height + margin.top + margin.bottom)
   const g = svg.append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
+  
+  const title = svg.append("text")
+    .attr('x', (width + margin.left + margin.right) / 2)
+    .attr('y', margin.top / 2)
+    .attr('font-size','2em')
+    .attr('text-anchor', 'middle')
+    .text('Heatmap of Correlation Matrix');
 
     // Build X scales and axis:
   const x = d3.scaleBand()
